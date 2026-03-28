@@ -1,0 +1,235 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultra Pro Panel</title><style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI';}
+
+body{
+  height:100vh;
+  background: radial-gradient(circle at top,#0f2027,#000);
+  color:white;
+  transition:0.4s;
+}
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  padding:15px;
+}
+
+select,input,button{
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  margin:5px;
+}
+
+button{
+  cursor:pointer;
+  background:linear-gradient(45deg,#00f2fe,#4facfe);
+  color:white;
+  transition:0.3s;
+}
+
+button:hover{transform:scale(1.05);}
+
+.container{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:85vh;
+}
+
+.card{
+  width:360px;
+  padding:25px;
+  border-radius:20px;
+  background:rgba(255,255,255,0.06);
+  backdrop-filter:blur(20px);
+  box-shadow:0 0 40px rgba(0,255,255,0.2);
+  text-align:center;
+}
+
+.hidden{display:none;}
+
+.link-box{
+  background:rgba(0,0,0,0.5);
+  padding:12px;
+  margin-top:10px;
+  border-radius:12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  transition:0.3s;
+  gap:5px;
+}
+
+.link-box:hover{
+  transform:scale(1.05);
+  background:rgba(0,255,255,0.2);
+}
+
+.copy-btn{background:#00ff9d;color:black;}
+.delete-btn{background:#ff4d4d;color:white;}
+
+.dashboard{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:15px;
+}
+
+.box{
+  padding:10px;
+  border-radius:12px;
+  background:rgba(255,255,255,0.08);
+}
+
+</style></head><body><div class="topbar">
+  <div>
+    <select id="lang">
+      <option value="en">English</option>
+      <option value="fa">فارسی</option>
+    </select>
+    <select id="theme">
+      <option value="dark">Dark</option>
+      <option value="neon">Neon</option>
+      <option value="red">Red</option>
+    </select>
+    <input type="color" id="colorPicker">
+  </div>
+</div><div class="container" id="loginPage">
+  <div class="card">
+    <h2 id="loginText">Login</h2>
+    <input type="text" id="username" placeholder="Username"><br>
+    <input type="password" id="password" placeholder="Password"><br>
+    <button onclick="login()" id="loginBtn">Enter</button>
+  </div>
+</div><div class="container hidden" id="panel">
+  <div class="card">
+    <h2 id="addUserText">Add User</h2><div class="dashboard">
+  <div class="box">Users: <span id="userCount">1</span></div>
+  <div class="box">Links: <span id="linkCount">0</span></div>
+</div>
+
+<select id="userLang">
+  <option value="en">English</option>
+  <option value="fa">فارسی</option>
+</select>
+
+<input type="text" id="urlInput" placeholder="Enter URL">
+<button onclick="addLink()" id="addBtn">Add</button>
+
+<div id="links"></div>
+
+  </div>
+</div><script>
+const correct = "738382+29191";
+let currentLang='en';
+let links=[];
+
+function login(){
+  if(username.value===correct && password.value===correct){
+    loginPage.classList.add('hidden');
+    panel.classList.remove('hidden');
+    loadLinks();
+  }else alert(currentLang==='fa'?'اشتباهه':'Wrong!');
+}
+
+function addLink(){
+  let url=urlInput.value;
+  if(!url)return;
+
+  links.push(url);
+  save();
+  renderLinks();
+  urlInput.value='';
+}
+
+function deleteLink(index){
+  links.splice(index,1);
+  save();
+  renderLinks();
+}
+
+function save(){
+  localStorage.setItem('links',JSON.stringify(links));
+}
+
+function renderLinks(){
+  document.getElementById('links').innerHTML='';
+
+  links.forEach((url,i)=>{
+    let box=document.createElement('div');
+    box.className='link-box';
+
+    let span=document.createElement('span');
+    span.innerText=url;
+
+    let copy=document.createElement('button');
+    copy.className='copy-btn';
+    copy.innerText=currentLang==='fa'?'کپی':'Copy';
+    copy.onclick=()=>{
+      navigator.clipboard.writeText(url);
+      alert(currentLang==='fa'?'کپی شد':'Copied');
+    };
+
+    let del=document.createElement('button');
+    del.className='delete-btn';
+    del.innerText=currentLang==='fa'?'حذف':'Delete';
+    del.onclick=()=>deleteLink(i);
+
+    box.appendChild(span);
+    box.appendChild(copy);
+    box.appendChild(del);
+    document.getElementById('links').appendChild(box);
+  });
+
+  linkCount.innerText=links.length;
+}
+
+function loadLinks(){
+  let saved=localStorage.getItem('links');
+  if(saved) links=JSON.parse(saved);
+  renderLinks();
+}
+
+const texts={
+  en:{login:'Login',add:'Add',addUser:'Add User',url:'Enter URL'},
+  fa:{login:'ورود',add:'افزودن',addUser:'افزودن کاربر',url:'لینک را وارد کن'}
+};
+
+lang.onchange=function(){
+  currentLang=this.value;
+  let t=texts[currentLang];
+
+  loginText.innerText=t.login;
+  addUserText.innerText=t.addUser;
+  loginBtn.innerText=t.login;
+  addBtn.innerText=t.add;
+  urlInput.placeholder=t.url;
+  renderLinks();
+};
+
+theme.onchange=function(){
+  let val=this.value;
+  if(val==='neon'){
+    document.body.style.background='black';
+    document.body.style.color='#00ffff';
+  }
+  else if(val==='red'){
+    document.body.style.background='linear-gradient(#200,#600)';
+  }
+  else{
+    document.body.style.background='radial-gradient(circle at top,#0f2027,#000)';
+    document.body.style.color='white';
+  }
+};
+
+colorPicker.oninput=function(){
+  document.body.style.background=this.value;
+};
+
+</script></body>
+</html>
