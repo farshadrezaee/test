@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pepe Messenger</title>
+
+<style>
+body{
+margin:0;
+font-family:tahoma;
+background:#0f172a;
+color:white;
+}
+
+.screen{display:none;padding:15px;}
+.active{display:block;}
+
+.topbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+background:#111827;
+padding:10px;
+border-radius:12px;
+margin-bottom:10px;
+}
+
+.chat-box{
+height:55vh;
+overflow-y:auto;
+background:#1e293b;
+padding:10px;
+border-radius:12px;
+}
+
+.message{
+background:#334155;
+padding:8px;
+border-radius:10px;
+margin:5px 0;
+max-width:80%;
+}
+
+.me{background:#16a34a;}
+
+input,button,select{
+width:100%;
+padding:10px;
+margin-top:8px;
+border:none;
+border-radius:10px;
+font-size:14px;
+}
+
+button{
+background:#22c55e;
+color:white;
+cursor:pointer;
+}
+
+.profile-box{
+text-align:center;
+background:#1e293b;
+padding:15px;
+border-radius:15px;
+}
+
+.profile-box img{
+width:120px;
+height:120px;
+border-radius:50%;
+object-fit:cover;
+margin-bottom:10px;
+}
+
+.panel{
+background:#1e293b;
+padding:15px;
+border-radius:15px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="login" class="screen active">
+<h2>ورود</h2>
+<input id="phone" placeholder="شماره وارد کن">
+<button onclick="sendCode()">ارسال کد</button>
+</div>
+
+<!-- VERIFY -->
+<div id="verify" class="screen">
+<h2>کد تایید</h2>
+<input id="code" placeholder="کد 1234">
+<button onclick="verify()">ورود</button>
+</div>
+
+<!-- MAIN -->
+<div id="main" class="screen">
+<div class="topbar">
+<div>Pepe Messenger</div>
+<div>
+<button onclick="openProfile()">👤</button>
+<button onclick="openSettings()">⚙</button>
+</div>
+</div>
+
+<div class="chat-box" id="chat"></div>
+
+<input id="msg" placeholder="پیام بنویس... (/panel)">
+<button onclick="sendMsg()">ارسال</button>
+</div>
+
+<!-- PANEL -->
+<div id="panel" class="screen">
+<h2>پنل استارز</h2>
+<div class="panel">
+<p>استارز شما: <span id="starCount"></span></p>
+<button onclick="addStars()">افزایش 50 استارز</button>
+<button onclick="sendPepe()">ارسال پپه (10 استارز)</button>
+<button onclick="back()">بازگشت</button>
+</div>
+</div>
+
+<!-- PROFILE -->
+<div id="profile" class="screen">
+<h2>پروفایل</h2>
+<div class="profile-box">
+<img id="avatar">
+<p>شماره: <span id="profilePhone"></span></p>
+<p>استارز: <span id="profileStars"></span></p>
+
+<select id="pepeSelect" onchange="changeAvatar()">
+<option value="https://i.imgur.com/4M34hi2.png">Pepe کلاسیک</option>
+<option value="https://i.imgur.com/0Z8FQ6Q.png">Pepe خنده</option>
+<option value="https://i.imgur.com/jQ9X1Hn.png">Pepe عصبانی</option>
+</select>
+
+<button onclick="back()">بازگشت</button>
+</div>
+</div>
+
+<!-- SETTINGS -->
+<div id="settings" class="screen">
+<h2>تنظیمات</h2>
+<p>موجودی استارز: <span id="settingsStars"></span></p>
+<button onclick="back()">بازگشت</button>
+</div>
+
+<script>
+
+let stars = localStorage.getItem("stars") ? parseInt(localStorage.getItem("stars")) : 0;
+let phone = localStorage.getItem("phone") || "";
+let avatar = localStorage.getItem("avatar") || "https://i.imgur.com/4M34hi2.png";
+
+function switchScreen(id){
+document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+}
+
+function sendCode(){
+if(phoneInputEmpty()) return;
+alert("کد تستی: 1234");
+switchScreen("verify");
+}
+
+function phoneInputEmpty(){
+let p=document.getElementById("phone").value.trim();
+if(p===""){alert("شماره وارد کن");return true;}
+localStorage.setItem("phone",p);
+phone=p;
+return false;
+}
+
+function verify(){
+if(document.getElementById("code").value==="1234"){
+switchScreen("main");
+}else alert("کد اشتباه");
+}
+
+function sendMsg(){
+let input=document.getElementById("msg");
+let text=input.value.trim();
+if(text==="") return;
+
+if(text==="/panel"){
+update();
+switchScreen("panel");
+input.value="";
+return;
+}
+
+addMessage(text,true);
+input.value="";
+}
+
+function addMessage(text,isMe){
+let div=document.createElement("div");
+div.className="message"+(isMe?" me":"");
+div.innerHTML=text;
+document.getElementById("chat").appendChild(div);
+}
+
+function addStars(){
+stars+=50;
+localStorage.setItem("stars",stars);
+update();
+}
+
+function sendPepe(){
+if(stars>=10){
+stars-=10;
+localStorage.setItem("stars",stars);
+update();
+addMessage("<img src='"+avatar+"' width='100'>",true);
+alert("پپه ارسال شد");
+}else alert("استارز کافی نیست");
+}
+
+function update(){
+document.getElementById("starCount").innerText=stars;
+document.getElementById("settingsStars").innerText=stars;
+document.getElementById("profileStars").innerText=stars;
+}
+
+function openSettings(){
+update();
+switchScreen("settings");
+}
+
+function openProfile(){
+document.getElementById("profilePhone").innerText=phone;
+document.getElementById("profileStars").innerText=stars;
+document.getElementById("avatar").src=avatar;
+switchScreen("profile");
+}
+
+function changeAvatar(){
+avatar=document.getElementById("pepeSelect").value;
+localStorage.setItem("avatar",avatar);
+document.getElementById("avatar").src=avatar;
+}
+
+function back(){switchScreen("main");}
+
+update();
+
+</script>
+</body>
+</html>
